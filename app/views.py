@@ -1,9 +1,17 @@
 from app import app, db
-from flask import jsonify, render_template, request, redirect
+from flask import jsonify, render_template, request, redirect, session, url_for, flash
+from flask_login import LoginManager, login_required
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.models import Users, Photos
 
 from .aws_helper import upload_file_to_s3
+
+
+# login manager
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
 
 @app.route('/')
@@ -11,7 +19,68 @@ def index():
     return "Hello world!", 200
 
 
+@app.route('/signup')
+def signup():
+    return render_template("signup.html")
+
+
+@app.route('/signup', methods=['POST'])
+def signup_post():
+    email = request.form.get('email')
+    name = request.form.get('name')
+    password = request.form.get('password')
+
+    # if a user is found, we want user can try again
+    user = Users.query.filter_by(email=email).first()
+    if user:
+        return redirect(url_for('signup'))
+
+    # create new user with the form data
+    # hash the password
+    new_user = Users(email=email,
+                     name=name,
+                     quota=20,
+                     count=0,
+                     is_activated=0,
+                     password=generate_password_hash(password, method='sha256'))
+
+    # add the new user to db
+    db.session.add(new_user)
+    db.session.commit()
+
+    return redirect(url_for('login'))
+
+
+@app.route('/login')
+def login():
+    return render_template("login.html")
+
+
+@app.route('/login', methods=['POST'])
+def login_post():
+    email = request.form.get('email')
+    password = request.form.get('password')
+    remember = True if request.form.get('remember') else False
+
+    user = Users.query.filter_by(email=email).first()
+
+    # check if user actually exists
+    # hash the supplied password and compare it to the one in db
+    if not user or not check_password_hash(user.password, password):
+        flash('Please check your login details and try again.')
+        return redirect(url_for('login'))
+
+    # all checks passed
+    return "aok"
+
+
+@app.route('/profile')
+def profile():
+    return render_template("profile.html")
+
+
 @app.route('/upload')
+@login_required
 def upload():
     return render_template("upload.html")
 

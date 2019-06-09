@@ -13,6 +13,7 @@ export S3_SECRET=""
 
 The following environmental variables are optional:
 ```
+export APP_SECRET_KEY="" # default is "dev"
 export DB_USER="" # default is "luminauser"
 export DB_PASSWORD="" # default is "luminapassword"
 export DB_URI="" # default is "localhost:3306"

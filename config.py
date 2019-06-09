@@ -24,3 +24,6 @@ SQLALCHEMY_TRACK_MODIFICATIONS = True
 S3_BUCKET = os.environ.get("S3_BUCKET")
 S3_KEY = os.environ.get("S3_KEY")
 S3_SECRET = os.environ.get("S3_SECRET")
+
+# Flask app secret key
+APP_SECRET_KEY = os.environ.get('APP_SECRET_KEY', 'dev')

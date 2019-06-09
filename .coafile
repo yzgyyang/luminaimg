@@ -9,6 +9,7 @@ bears = SpaceConsistencyBear
 
 [all.autopep8]
 files = **.py
+ignore = app/__init__.py
 language = Python
 bears = PEP8Bear, PycodestyleBear
 pycodestyle_ignore = E722

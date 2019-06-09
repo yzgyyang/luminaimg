@@ -6,5 +6,7 @@ python:
 before_install:
   - pip install coala coala-bears
 
+install: true
+
 script:
   - coala --non-interactive

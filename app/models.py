@@ -2,7 +2,7 @@ from app import db
 from sqlalchemy.sql import expression
 
 
-class Users(db.Model):
+class User(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -18,7 +18,7 @@ class Users(db.Model):
     count = db.Column(db.Integer, nullable=False, default=0)
 
 
-class Photos(db.Model):
+class Photo(db.Model):
     __tablename__ = 'photos'
 
     id = db.Column(db.Integer, primary_key=True)

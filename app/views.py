@@ -20,7 +20,9 @@ login_manager.login_view = "login"
 
 @app.route("/")
 def index():
-    return "Hello world!", 200
+    users = User.query.all()
+    return render_template("index.html",
+                           users=users)
 
 
 @app.route("/signup")
@@ -89,12 +91,14 @@ def load_user(user_id):
 @app.route("/logout")
 def logout():
     logout_user()
-    return "Logged out"
+    return render_template("message.html",
+                           message="Logged out")
 
 
-@app.route("/profile")
-def profile():
-    return render_template("profile.html")
+@app.route("/@<username>")
+def user_profile(username):
+    return render_template("message.html",
+                           message="Welcome to " + username)
 
 
 @app.route("/upload")

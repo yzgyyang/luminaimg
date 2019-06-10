@@ -14,27 +14,27 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 
 
-@app.route('/')
+@app.route("/")
 def index():
     return "Hello world!", 200
 
 
-@app.route('/signup')
+@app.route("/signup")
 def signup():
     return render_template("signup.html")
 
 
-@app.route('/signup', methods=['POST'])
+@app.route("/signup", methods=["POST"])
 def signup_post():
-    email = request.form.get('email')
-    name = request.form.get('name')
-    password = request.form.get('password')
+    email = request.form.get("email")
+    name = request.form.get("name")
+    password = request.form.get("password")
 
     # if a user is found, we want user can try again
     user = User.query.filter_by(email=email).first()
     if user:
-        flash('Email address already exists')
-        return redirect(url_for('signup'))
+        flash("Email address already exists")
+        return redirect(url_for("signup"))
 
     # create new user with the form data
     # hash the password
@@ -42,7 +42,7 @@ def signup_post():
                     name=name,
                     quota=20,
                     count=0,
-                    password=generate_password_hash(password, method='sha256'))
+                    password=generate_password_hash(password, method="sha256"))
 
     # add the new user to db
     db.session.add(new_user)
@@ -51,13 +51,13 @@ def signup_post():
     return redirect(url_for("login"))
 
 
-@app.route('/login')
+@app.route("/login")
 def login():
     return render_template("login.html",
                            next=request.args.get("next") or url_for("index"))
 
 
-@app.route('/login', methods=['POST'])
+@app.route("/login", methods=["POST"])
 def login_post():
     email = request.form.get("email")
     password = request.form.get("password")
@@ -82,18 +82,18 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-@app.route('/logout')
+@app.route("/logout")
 def logout():
     logout_user()
     return "Logged out"
 
 
-@app.route('/profile')
+@app.route("/profile")
 def profile():
     return render_template("profile.html")
 
 
-@app.route('/upload')
+@app.route("/upload")
 @login_required
 def upload():
     return render_template("upload.html")
@@ -128,7 +128,7 @@ def upload_file():
         return redirect("/")
 
 
-@app.route('/dev/init')
+@app.route("/dev/init")
 def init():
     db.create_all()
     return jsonify({"message": "Init was successful."}), 200

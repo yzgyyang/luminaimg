@@ -1,6 +1,6 @@
 from app import app, db
 from flask import jsonify, render_template, request, redirect, session, url_for, flash
-from flask_login import LoginManager, login_required
+from flask_login import LoginManager, login_required, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.models import User, Photo
@@ -42,7 +42,6 @@ def signup_post():
                     name=name,
                     quota=20,
                     count=0,
-                    is_activated=0,
                     password=generate_password_hash(password, method='sha256'))
 
     # add the new user to db
@@ -74,7 +73,19 @@ def login_post():
         return redirect(url_for("login"))
 
     # all checks passed
+    login_user(user, remember=remember)
     return redirect(next_url)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return "Logged out"
 
 
 @app.route('/profile')

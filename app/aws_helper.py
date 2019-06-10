@@ -10,12 +10,11 @@ s3 = boto3.client(
 )
 
 
-def upload_file_to_s3(file, bucket_name, acl="public-read"):
+def upload_file_to_s3(file, bucket_name=S3_BUCKET, acl="public-read"):
     """
     Docs: http://boto3.readthedocs.io/en/latest/guide/s3.html
     """
     try:
-        print(file, bucket_name, file.filename, acl, file.content_type)
         s3.upload_fileobj(
             file,
             bucket_name,
@@ -29,4 +28,8 @@ def upload_file_to_s3(file, bucket_name, acl="public-read"):
         print("Something Happened: ", e)
         return e
 
-    return "{}{}".format("http://{}.s3.amazonaws.com/".format(bucket_name), file.filename)
+    return build_s3_url(file.filename, bucket_name)
+
+
+def build_s3_url(filename, bucket_name=S3_BUCKET):
+    return "https://{}.s3.amazonaws.com/{}".format(bucket_name, filename)

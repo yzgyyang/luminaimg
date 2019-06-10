@@ -19,7 +19,7 @@ class Photo(db.Model):
     __tablename__ = 'photos'
 
     id = db.Column(db.Integer, primary_key=True)
-    uuid = db.Column(db.String(32), nullable=False, unique=True)
+    uuid = db.Column(db.String(64), nullable=False, unique=True)
     user_id = db.Column(db.Integer, nullable=False)
     title = db.Column(db.String(32))
     desc = db.Column(db.String(128))

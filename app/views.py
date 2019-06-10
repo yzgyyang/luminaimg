@@ -1,11 +1,14 @@
+import os
+import uuid
+
 from app import app, db
 from flask import jsonify, render_template, request, redirect, session, url_for, flash
-from flask_login import LoginManager, login_required, login_user, logout_user
+from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.models import User, Photo
 
-from .aws_helper import upload_file_to_s3
+from .aws_helper import upload_file_to_s3, build_s3_url
 
 
 # login manager
@@ -102,8 +105,8 @@ def upload():
 @app.route("/upload", methods=["POST"])
 def upload_file():
     """
-        These attributes are also available
-        file.filename               # The actual name of the file
+        These attributes are available for file object
+        file.filename
         file.content_type
         file.content_length
         file.mimetype
@@ -111,21 +114,53 @@ def upload_file():
     # check request.files for user_file key (the name of the file input on form)
     if "user_file" not in request.files:
         return "No user_file key in request.files"
-
-    # If the key is in the object, we save it in a variable called file.
     file = request.files["user_file"]
 
-    # if filename is empty, it means the user sumbmitted an empty form
+    is_safe, message = validate_file(file)
+    if not is_safe:
+        return message
+
+    # check and update user quota
+    if current_user.count >= current_user.quota:
+        return "Quota exceeded, please upgrade your plan"
+
+    # rename file
+    file_uuid = str(uuid.uuid4()).upper()
+    file.filename = "{}.jpg".format(file_uuid)
+
+    # update db
+    new_photo = Photo(
+        uuid=file_uuid,
+        user_id=current_user.id,
+    )
+    db.session.add(new_photo)
+    current_user.count += 1
+    db.session.add(current_user)
+    db.session.commit()
+
+    path = upload_file_to_s3(file, app.config["S3_BUCKET"])
+    print(path)
+    return "ok"
+
+
+def validate_file(file):
+    # check that the file exists
+    if not file:
+        return False, "file does not exist"
+
+    # user sumbmitted an empty form
     if file.filename == "":
-        return "Please select a file"
+        return False, "Please select a file"
 
-    # check that the file exists, and that an allowed file type and size
-    if file:
-        output = upload_file_to_s3(file, app.config["S3_BUCKET"])
-        return str(output)
+    # verify file extension
+    if os.path.splitext(file.filename)[1].lower() not in [".jpg", ".jpeg"]:
+        return False, "Only JPEG files are supported (file extension)"
 
-    else:
-        return redirect("/")
+    # verify MIME type
+    if file.mimetype != "image/jpeg":
+        return False, "Only JPEG files are supported (mimetype)"
+
+    return True, ""
 
 
 @app.route("/dev/init")

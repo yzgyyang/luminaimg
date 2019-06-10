@@ -97,8 +97,7 @@ def logout():
 
 @app.route("/@<username>")
 def user_profile(username):
-    return render_template("message.html",
-                           message="Welcome to " + username)
+    return render_template("u.html")
 
 
 @app.route("/upload")

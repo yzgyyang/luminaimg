@@ -1,8 +1,8 @@
 from app import db
-from sqlalchemy.sql import expression
+from flask_login import UserMixin
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -11,9 +11,6 @@ class User(db.Model):
     password = db.Column(db.String(128))
     name = db.Column(db.String(32))
     bio = db.Column(db.String(512))
-    is_activated = db.Column(db.Boolean,
-                             nullable=False,
-                             server_default=expression.true())
     quota = db.Column(db.Integer, nullable=False)
     count = db.Column(db.Integer, nullable=False, default=0)
 

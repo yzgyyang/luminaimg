@@ -4,6 +4,7 @@ import uuid
 from app import app, db
 from flask import jsonify, render_template, request, redirect, session, url_for, flash
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
+from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.models import User, Photo
@@ -114,32 +115,35 @@ def upload_file():
     # check request.files for user_file key (the name of the file input on form)
     if "user_file" not in request.files:
         return "No user_file key in request.files"
-    file = request.files["user_file"]
+    files = request.files.getlist("user_file")
 
-    is_safe, message = validate_file(file)
-    if not is_safe:
-        return message
+    for file in files:
+        file.filename = secure_filename(file.filename)
+        is_safe, message = validate_file(file)
+        if not is_safe:
+            return message
 
-    # check and update user quota
-    if current_user.count >= current_user.quota:
-        return "Quota exceeded, please upgrade your plan"
+        # check and update user quota
+        if current_user.count >= current_user.quota:
+            return "Quota exceeded, please upgrade your plan"
 
-    # rename file
-    file_uuid = str(uuid.uuid4()).upper()
-    file.filename = "{}.jpg".format(file_uuid)
+        # rename file
+        file_uuid = str(uuid.uuid4()).upper()
+        file.filename = "{}.jpg".format(file_uuid)
 
-    # update db
-    new_photo = Photo(
-        uuid=file_uuid,
-        user_id=current_user.id,
-    )
-    db.session.add(new_photo)
-    current_user.count += 1
-    db.session.add(current_user)
-    db.session.commit()
+        # update db
+        new_photo = Photo(
+            uuid=file_uuid,
+            user_id=current_user.id,
+        )
+        db.session.add(new_photo)
+        current_user.count += 1
+        db.session.add(current_user)
+        db.session.commit()
 
-    path = upload_file_to_s3(file, app.config["S3_BUCKET"])
-    print(path)
+        path = upload_file_to_s3(file, app.config["S3_BUCKET"])
+        print(path)
+
     return "ok"
 
 

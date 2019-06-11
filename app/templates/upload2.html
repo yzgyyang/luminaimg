@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<form action="/upload" method="POST" enctype="multipart/form-data">
+
+    <img src="{{ photo.url }}">
+    <div class="field">
+        <div class="control">
+            <input class="input is-large" type="text" name="title" placeholder="Title" autofocus="">
+        </div>
+        <div class="control">
+            <input class="input is-large" type="text" name="desc" placeholder="Description" autofocus="">
+        </div>
+    </div>
+    <input type="hidden" name="photo_id" value="{{ photo.id }}"></input>
+    <button class="button is-block is-info is-large is-fullwidth">Sign Up</button>
+
+</form>
+{% endblock %}

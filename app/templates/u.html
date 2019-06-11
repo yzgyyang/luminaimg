@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>Gallery by name</title>
+        <title>Gallery by {{ user.name }}</title>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
         <link rel="stylesheet" href="static/css/main.css" />
@@ -13,7 +13,6 @@
 
                 <!-- Header -->
                     <header id="header">
-                        <h1><a href="index.html"><strong>Gallery</strong> by name</a></h1>
                         <nav>
                             <ul>
                                 <li><a href="#footer" class="icon solid fa-info-circle">About</a></li>
@@ -23,14 +22,16 @@
 
                 <!-- Main -->
                     <div id="main">
+                        {% for photo in photos %}
                         <article class="thumb">
-                            <a href="https://bulma.io/images/placeholders/1280x960.png" class="image"><img src="https://bulma.io/images/placeholders/96x96.png" alt="" /></a>
-                            <h2>Magna feugiat lorem</h2>
-                            <p>Nunc blandit nisi ligula magna sodales lectus elementum non. Integer id venenatis velit.</p>
+                            <a href="{{ photo.url }}" class="image"><img src="{{ photo.url }}" alt="" /></a>
+                            <h2>{{ photo.title }}</h2>
+                            <p>{{ photo.desc }}</p>
                             <button href="#">Buy it now</button>
                             <button href="#">Add to Cart</button>
                             <br /><br />
                         </article>
+                        {% endfor %}
                     </div>
 
                 <!-- Footer -->
@@ -38,8 +39,8 @@
                         <div class="inner split">
                             <div>
                                 <section>
-                                    <h2>NAME</h2>
-                                    <p>bio</p>
+                                    <h2>{{ user.name }}</h2>
+                                    <p> {{ user.bio }}</p>
                                 </section>
                                 <section>
                                     <h2>Follow me on ...</h2>

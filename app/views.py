@@ -35,11 +35,17 @@ def signup_post():
     email = request.form.get("email")
     name = request.form.get("name")
     password = request.form.get("password")
+    username = request.form.get("username")
+    bio = request.form.get("bio")
 
     # if a user is found, we want user can try again
     user = User.query.filter_by(email=email).first()
     if user:
         flash("Email address already exists")
+        return redirect(url_for("signup"))
+    user = User.query.filter_by(username=username).first()
+    if user:
+        flash("Username already exists")
         return redirect(url_for("signup"))
 
     # create new user with the form data
@@ -48,6 +54,8 @@ def signup_post():
                     name=name,
                     quota=20,
                     count=0,
+                    bio=bio,
+                    username=username,
                     password=generate_password_hash(password, method="sha256"))
 
     # add the new user to db
@@ -97,13 +105,28 @@ def logout():
 
 @app.route("/@<username>")
 def user_profile(username):
-    return render_template("u.html")
+    if User.query.filter(User.username == username).count == 0:
+        return render_template("message.txt",
+                               message="User does not exist.")
+    user_shown = User.query.filter(User.username == username).first()
+    photos_shown = Photo.query.filter(Photo.user_id == user_shown.id).all()
+
+    photos = []
+    for photo in photos_shown:
+        photos.append({"url": build_s3_url(photo.uuid + ".jpg"),
+                       "title": photo.title,
+                       "desc": photo.desc})
+
+    return render_template("u.html",
+                           user=user_shown,
+                           photos=photos)
 
 
 @app.route("/upload")
 @login_required
 def upload():
-    return render_template("upload.html")
+    return render_template("upload.html",
+                           avail=current_user.quota - current_user.count)
 
 
 @app.route("/upload", methods=["POST"])
@@ -147,7 +170,36 @@ def upload_file():
         path = upload_file_to_s3(file, app.config["S3_BUCKET"])
         print(path)
 
-    return "ok"
+    return redirect(url_for("upload2"))
+
+
+@app.route("/upload2")
+@login_required
+def upload2():
+    p = Photo.query.filter(Photo.user_id == current_user.id,
+                           Photo.title == None).first()
+    if p is None:
+        return render_template("message.html",
+                               message="No more photos! Hooray!")
+    photo = {"photo_id": p.id,
+             "url": build_s3_url(p.uuid + ".jpg")}
+    return render_template("upload2.html",
+                           photo=photo)
+
+
+@app.route("/upload2", methods=["POST"])
+def upload2_post():
+    title = request.form.get("title")
+    desc = request.form.get("desc")
+    photo_id = request.form.get("photo_id")
+
+    p = Photo.query.filter(Photo.id == photo_id).first()
+    p.title = title
+    p.desc = desc
+    db.session.add(p)
+    db.session.commit()
+
+    return redirect(url_for(upload))
 
 
 def validate_file(file):
